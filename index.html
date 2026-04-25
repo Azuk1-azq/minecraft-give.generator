@@ -1,24 +1,30 @@
 
-<h2 class="sr-only">/giveジェネレーター あずき作</h2>
+<h2 class="sr-only">/giveジェネレーター(1.20.5以降) あずき作</h2>
 
 <style>
 select { background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 8px; font-size: 13px; cursor: pointer; }
-.lore-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center; margin-bottom: 6px; }
+.lore-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; margin-bottom: 6px; }
 .lore-row input[type=text] { width: 100%; box-sizing: border-box; }
-#generate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.cmd-type-btn { font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; text-align: left; }
+.cmd-type-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
 </style>
 
 <div style="padding: 1rem 0;">
 
 <div style="margin-bottom: 12px;">
+  <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">コマンド形式</label>
+  <div style="display: flex; flex-direction: column; gap: 6px;" id="cmd-type-btns"></div>
+</div>
+
+<div style="margin-bottom: 12px;">
   <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">プレイヤー名</label>
-  <input type="text" id="player-input" placeholder="プレイヤー名を入力（例: _azq）" style="width: 100%; box-sizing: border-box;" />
+  <input type="text" id="player-input" placeholder="例: _azq" style="width: 100%; box-sizing: border-box;" />
 </div>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
   <div>
     <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">アイテムID</label>
-    <input type="text" id="itemid" placeholder="例: minecraft:diamond_sword" style="width: 100%; box-sizing: border-box;" />
+    <input type="text" id="itemid" placeholder="例: diamond_sword" style="width: 100%; box-sizing: border-box;" />
   </div>
   <div>
     <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">個数</label>
@@ -28,13 +34,7 @@ select { background: var(--color-background-primary); color: var(--color-text-pr
 
 <div style="margin-bottom: 12px;">
   <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">カスタム名（custom_name）</label>
-  <input type="text" id="itemname" placeholder="空欄でデフォルト名" style="width: 100%; box-sizing: border-box; margin-bottom: 6px;" />
-  <div style="display: flex; gap: 12px; align-items: center;">
-    <div id="name-color-wrap"></div>
-    <label style="font-size: 13px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 4px; cursor: pointer;">
-      <input type="checkbox" id="name-italic" /> イタリック
-    </label>
-  </div>
+  <input type="text" id="itemname" placeholder="空欄でデフォルト名" style="width: 100%; box-sizing: border-box;" />
 </div>
 
 <div style="margin-bottom: 12px;">
@@ -47,7 +47,7 @@ select { background: var(--color-background-primary); color: var(--color-text-pr
 
 <div id="error-msg" style="display: none; font-size: 13px; color: var(--color-text-danger); margin-bottom: 8px;"></div>
 
-<button id="generate-btn" onclick="generate()" style="width: 100%; padding: 10px; font-size: 15px; font-weight: 500; margin-bottom: 16px;">コマンドを生成</button>
+<button onclick="generate()" style="width: 100%; padding: 10px; font-size: 15px; font-weight: 500; margin-bottom: 16px;">コマンドを生成</button>
 
 <div id="output-area" style="display: none;">
   <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; margin-bottom: 8px;">
@@ -66,41 +66,27 @@ select { background: var(--color-background-primary); color: var(--color-text-pr
 </div>
 
 <script>
-const MC_COLORS = {
-  white:'#ffffff', yellow:'#FFFF55', gold:'#FFAA00', aqua:'#55FFFF',
-  blue:'#5555FF', light_purple:'#FF55FF', dark_purple:'#AA00AA',
-  green:'#55FF55', dark_green:'#00AA00', red:'#FF5555',
-  dark_red:'#AA0000', gray:'#AAAAAA', dark_gray:'#555555'
-};
-
-const COLOR_OPTIONS = [
-  ['dark_purple','紫'],['light_purple','明紫'],['white','白'],
-  ['yellow','黄'],['gold','金'],['aqua','水色'],['gray','灰']
-];
-const NAME_COLOR_OPTIONS = [
-  ['','色なし'],['white','白'],['yellow','黄'],['gold','金'],['aqua','水色'],
-  ['blue','青'],['light_purple','明るい紫'],['dark_purple','紫'],
-  ['green','緑'],['dark_green','暗い緑'],['red','赤'],
-  ['dark_red','暗い赤'],['gray','灰'],['dark_gray','暗い灰']
+const CMD_TYPES = [
+  { label: '/give（シングルプレイまたはバニラサーバーの場合はこちら）', value: 'give' },
+  { label: '/minecraft:give（EssentialsXの場合はこちら）', value: 'minecraft_give' },
 ];
 
-function makeSelect(options, selectedVal) {
-  const sel = document.createElement('select');
-  options.forEach(([v, label]) => {
-    const opt = document.createElement('option');
-    opt.value = v;
-    opt.textContent = label;
-    if (v === selectedVal) opt.selected = true;
-    sel.appendChild(opt);
+let selectedCmdType = 'give';
+
+function renderCmdTypeBtns() {
+  const c = document.getElementById('cmd-type-btns');
+  c.innerHTML = '';
+  CMD_TYPES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'cmd-type-btn' + (t.value === selectedCmdType ? ' active' : '');
+    btn.textContent = t.label;
+    btn.onclick = () => { selectedCmdType = t.value; renderCmdTypeBtns(); };
+    c.appendChild(btn);
   });
-  return sel;
 }
 
-const nameColorSel = makeSelect(NAME_COLOR_OPTIONS, '');
-document.getElementById('name-color-wrap').appendChild(nameColorSel);
-
 let loreIdx = 0;
-function addLore(val, colorVal, italicVal) {
+function addLore(val) {
   loreIdx++;
   const row = document.createElement('div');
   row.className = 'lore-row';
@@ -111,31 +97,17 @@ function addLore(val, colorVal, italicVal) {
   inp.placeholder = loreIdx + '行目';
   inp.value = val || '';
 
-  const colorSel = makeSelect(COLOR_OPTIONS, colorVal || 'dark_purple');
-  colorSel.className = 'lore-color-sel';
-
-  const cbWrap = document.createElement('label');
-  cbWrap.style.cssText = 'font-size: 12px; display: flex; align-items: center; gap: 3px; white-space: nowrap; color: var(--color-text-secondary); cursor: pointer;';
-  const cb = document.createElement('input');
-  cb.type = 'checkbox';
-  cb.className = 'lore-italic-cb';
-  cb.checked = italicVal !== false;
-  cbWrap.appendChild(cb);
-  cbWrap.appendChild(document.createTextNode('斜体'));
-
   const del = document.createElement('button');
   del.textContent = '✕';
   del.style.cssText = 'font-size: 12px; padding: 4px 8px; color: var(--color-text-secondary);';
   del.onclick = () => row.remove();
 
   row.appendChild(inp);
-  row.appendChild(colorSel);
-  row.appendChild(cbWrap);
   row.appendChild(del);
   document.getElementById('lore-lines').appendChild(row);
 }
 
-document.getElementById('add-lore-btn').onclick = () => addLore('', 'dark_purple', true);
+document.getElementById('add-lore-btn').onclick = () => addLore('');
 
 document.getElementById('copy-btn').onclick = () => {
   navigator.clipboard.writeText(document.getElementById('cmd-output').textContent).then(() => {
@@ -144,10 +116,6 @@ document.getElementById('copy-btn').onclick = () => {
     setTimeout(() => btn.textContent = 'コピー', 1500);
   });
 };
-
-function escapeJson(s) {
-  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-}
 
 function showError(msg) {
   const el = document.getElementById('error-msg');
@@ -158,55 +126,42 @@ function showError(msg) {
 function generate() {
   const player = document.getElementById('player-input').value.trim();
   const item = document.getElementById('itemid').value.trim();
-
   if (!player) { showError('プレイヤー名を入力してください'); return; }
   if (!item) { showError('アイテムIDを入力してください'); return; }
   showError('');
 
   const count = parseInt(document.getElementById('count').value) || 1;
   const name = document.getElementById('itemname').value.trim();
-  const nameItalic = document.getElementById('name-italic').checked;
-  const nameColor = nameColorSel.value;
-
-  const rows = document.querySelectorAll('.lore-row');
-  const lores = [];
-  rows.forEach(row => {
-    const t = row.querySelector('.lore-text').value.trim();
-    const c = row.querySelector('.lore-color-sel').value;
-    const it = row.querySelector('.lore-italic-cb').checked;
-    if (t) lores.push({ text: t, color: c, italic: it });
-  });
+  const lores = [...document.querySelectorAll('.lore-text')]
+    .map(i => i.value.trim())
+    .filter(v => v);
 
   const components = [];
-  if (name) {
-    let obj = `{"text":"${escapeJson(name)}","italic":${nameItalic}`;
-    if (nameColor) obj += `,"color":"${nameColor}"`;
-    obj += '}';
-    components.push(`custom_name='${obj}'`);
-  }
+  if (name) components.push(`custom_name='${name}'`);
   if (lores.length > 0) {
-    const arr = lores.map(l => `'{"text":"${escapeJson(l.text)}","color":"${l.color}","italic":${l.italic}}'`).join(',');
-    components.push(`lore=[${arr}]`);
+    components.push(`lore=[${lores.map(l => `'${l}'`).join(',')}]`);
   }
 
   const comp = components.length ? `[${components.join(',')}]` : '';
-  document.getElementById('cmd-output').textContent = `/minecraft:give ${player} ${item}${comp} ${count}`;
+  const prefix = selectedCmdType === 'minecraft_give' ? '/minecraft:give' : '/give';
+  const cmd = `${prefix} ${player} ${item}${comp} ${count}`;
+  document.getElementById('cmd-output').textContent = cmd;
 
   const prev = document.getElementById('mc-preview');
   prev.innerHTML = '';
-
   const nd = document.createElement('div');
-  nd.style.cssText = `font-size:14px;font-weight:bold;font-style:${nameItalic?'italic':'normal'};color:${nameColor?MC_COLORS[nameColor]||'#fff':'#ffffff'};margin-bottom:4px;`;
-  nd.textContent = name || item.replace(/^.*:/,'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  nd.style.cssText = 'font-size:14px;font-weight:bold;color:#ffffff;margin-bottom:4px;';
+  nd.textContent = name || item.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   prev.appendChild(nd);
-
   lores.forEach(l => {
     const ld = document.createElement('div');
-    ld.style.cssText = `font-size:13px;color:${MC_COLORS[l.color]||'#AA00AA'};font-style:${l.italic?'italic':'normal'};`;
-    ld.textContent = l.text;
+    ld.style.cssText = 'font-size:13px;color:#AA00AA;font-style:italic;';
+    ld.textContent = l;
     prev.appendChild(ld);
   });
 
   document.getElementById('output-area').style.display = 'block';
 }
+
+renderCmdTypeBtns();
 </script>
