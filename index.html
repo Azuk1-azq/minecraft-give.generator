@@ -1,71 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minecraft /give ジェネレーター あずき作</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --panel: #1a1a1a;
+      --border: #2e2e2e;
+      --accent: #57c754;
+      --accent2: #a259ff;
+      --text: #e8e8e8;
+      --text-sub: #888;
+      --danger: #ff5555;
+      --input-bg: #111;
+    }
 
-<h2 class="sr-only">/giveジェネレーター(1.20.5以降) あずき作</h2>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-select { background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 8px; font-size: 13px; cursor: pointer; }
-.lore-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; margin-bottom: 6px; }
-.lore-row input[type=text] { width: 100%; box-sizing: border-box; }
-.cmd-type-btn { font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; text-align: left; }
-.cmd-type-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
-</style>
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+      padding: 40px 16px 80px;
+    }
 
-<div style="padding: 1rem 0;">
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
 
-<div style="margin-bottom: 12px;">
-  <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">コマンド形式</label>
-  <div style="display: flex; flex-direction: column; gap: 6px;" id="cmd-type-btns"></div>
-</div>
+    header h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(12px, 3vw, 20px);
+      color: var(--accent);
+      text-shadow: 0 0 20px rgba(87,199,84,0.5);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
 
-<div style="margin-bottom: 12px;">
-  <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">プレイヤー名</label>
-  <input type="text" id="player-input" placeholder="例: _azq" style="width: 100%; box-sizing: border-box;" />
-</div>
+    header p {
+      color: var(--text-sub);
+      font-size: 13px;
+    }
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-  <div>
-    <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">アイテムID</label>
-    <input type="text" id="itemid" placeholder="例: diamond_sword" style="width: 100%; box-sizing: border-box;" />
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .card-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-sub);
+      margin-bottom: 10px;
+    }
+
+    input[type=text], input[type=number], select {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      padding: 10px 12px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type=text]:focus, input[type=number]:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    select { cursor: pointer; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .cmd-btns { display: flex; flex-direction: column; gap: 8px; }
+
+    .cmd-btn {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-sub);
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 13px;
+      padding: 10px 14px;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .cmd-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .cmd-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(87,199,84,0.07);
+    }
+
+    .name-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+
+    .lore-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .lore-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center; }
+
+    .lore-row input[type=text] { width: 100%; }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-sub);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 8px 10px;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    .add-btn {
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      color: var(--text-sub);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 10px;
+      width: 100%;
+      margin-top: 8px;
+      transition: all 0.15s;
+    }
+
+    .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .italic-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-sub);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .generate-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      padding: 16px;
+      width: 100%;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+
+    .generate-btn:hover { background: #6edd6b; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(87,199,84,0.3); }
+    .generate-btn:active { transform: translateY(0); }
+
+    .error-msg { color: var(--danger); font-size: 13px; margin-top: -8px; }
+
+    .output-card { display: none; }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .output-label { font-size: 12px; color: var(--text-sub); }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-sub);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 6px 12px;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--accent); color: var(--accent); }
+
+    .cmd-code {
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--accent);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      line-height: 1.8;
+      padding: 14px;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+
+    .preview-box {
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 12px;
+      padding: 14px 16px;
+    }
+
+    .preview-label { font-size: 10px; color: var(--text-sub); margin-bottom: 8px; font-family: 'Press Start 2P', monospace; }
+
+    .preview-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; font-family: 'Noto Sans JP', sans-serif; }
+
+    .preview-lore { font-size: 13px; font-style: italic; font-family: 'Noto Sans JP', sans-serif; }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: var(--text-sub);
+      font-size: 11px;
+      font-family: 'Press Start 2P', monospace;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌏 Minecraft<br>/give Generator</h1>
+  <p>Java Edition 1.20.5+ 対応</p>
+</header>
+
+<div class="container">
+
+  <!-- コマンド形式 -->
+  <div class="card">
+    <div class="card-label">コマンド形式</div>
+    <div class="cmd-btns" id="cmd-type-btns"></div>
   </div>
-  <div>
-    <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px;">個数</label>
-    <input type="number" id="count" value="1" min="1" max="64" style="width: 100%; box-sizing: border-box;" />
-  </div>
-</div>
 
-<div style="margin-bottom: 12px;">
-  <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">カスタム名（custom_name）</label>
-  <input type="text" id="itemname" placeholder="空欄でデフォルト名" style="width: 100%; box-sizing: border-box;" />
-</div>
-
-<div style="margin-bottom: 12px;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-    <label style="font-size: 13px; color: var(--color-text-secondary);">詳細テキスト（Lore）</label>
-    <button id="add-lore-btn" style="font-size: 12px; padding: 4px 10px;">+ 行を追加</button>
-  </div>
-  <div id="lore-lines"></div>
-</div>
-
-<div id="error-msg" style="display: none; font-size: 13px; color: var(--color-text-danger); margin-bottom: 8px;"></div>
-
-<button onclick="generate()" style="width: 100%; padding: 10px; font-size: 15px; font-weight: 500; margin-bottom: 16px;">コマンドを生成</button>
-
-<div id="output-area" style="display: none;">
-  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; margin-bottom: 8px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-      <span style="font-size: 13px; color: var(--color-text-secondary);">生成されたコマンド</span>
-      <button id="copy-btn" style="font-size: 12px; padding: 4px 10px;">コピー</button>
+  <!-- 基本設定 -->
+  <div class="card">
+    <div class="card-label">基本設定</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div class="card-label">プレイヤー名</div>
+        <input type="text" id="player-input" placeholder="例: _azq" />
+      </div>
+      <div class="grid2">
+        <div>
+          <div class="card-label">アイテムID</div>
+          <input type="text" id="itemid" placeholder="例: diamond_sword" />
+        </div>
+        <div>
+          <div class="card-label">個数</div>
+          <input type="number" id="count" value="1" min="1" max="64" />
+        </div>
+      </div>
     </div>
-    <code id="cmd-output" style="font-family: var(--font-mono); font-size: 12px; color: var(--color-text-primary); word-break: break-all; white-space: pre-wrap; display: block;"></code>
   </div>
-  <div style="background: #1a1a2e; border-radius: var(--border-radius-md); padding: 14px 16px;">
-    <div style="font-size: 11px; color: #888; margin-bottom: 8px;">プレビュー</div>
-    <div id="mc-preview" style="font-family: 'Courier New', monospace;"></div>
+
+  <!-- カスタム名 -->
+  <div class="card">
+    <div class="card-label">カスタム名（custom_name）</div>
+    <div class="name-row">
+      <input type="text" id="itemname" placeholder="空欄でデフォルト名" />
+      <div id="name-color-wrap"></div>
+      <label class="italic-label"><input type="checkbox" id="name-italic" /> 斜体</label>
+    </div>
   </div>
-</div>
+
+  <!-- Lore -->
+  <div class="card">
+    <div class="card-label">詳細テキスト（Lore）</div>
+    <div class="lore-list" id="lore-lines"></div>
+    <button class="add-btn" id="add-lore-btn">+ 行を追加</button>
+  </div>
+
+  <div class="error-msg" id="error-msg" style="display:none;"></div>
+
+  <button class="generate-btn" onclick="generate()">GENERATE</button>
+
+  <!-- 出力 -->
+  <div class="card output-card" id="output-area">
+    <div class="output-header">
+      <span class="output-label">生成されたコマンド</span>
+      <button class="copy-btn" id="copy-btn">コピー</button>
+    </div>
+    <div class="cmd-code" id="cmd-output"></div>
+    <div class="preview-box">
+      <div class="preview-label">PREVIEW</div>
+      <div id="mc-preview"></div>
+    </div>
+  </div>
 
 </div>
+
+<footer>このウェブサイトはあずきによって作成されました。©Azuki</footer>
 
 <script>
+const MC_COLORS = {
+  white:'#ffffff', yellow:'#FFFF55', gold:'#FFAA00', aqua:'#55FFFF',
+  blue:'#5555FF', light_purple:'#FF55FF', dark_purple:'#AA00AA',
+  green:'#55FF55', dark_green:'#00AA00', red:'#FF5555',
+  dark_red:'#AA0000', gray:'#AAAAAA', dark_gray:'#555555'
+};
+
+const LORE_COLOR_OPTIONS = [
+  ['dark_purple','紫'],['light_purple','明紫'],['white','白'],
+  ['yellow','黄'],['gold','金'],['aqua','水色'],['green','緑'],
+  ['red','赤'],['gray','灰']
+];
+
+const NAME_COLOR_OPTIONS = [
+  ['','色なし'],['white','白'],['yellow','黄'],['gold','金'],['aqua','水色'],
+  ['blue','青'],['light_purple','明紫'],['dark_purple','紫'],
+  ['green','緑'],['dark_green','暗緑'],['red','赤'],
+  ['dark_red','暗赤'],['gray','灰'],['dark_gray','暗灰']
+];
+
 const CMD_TYPES = [
   { label: '/give（シングルプレイまたはバニラサーバーの場合はこちら）', value: 'give' },
   { label: '/minecraft:give（EssentialsXの場合はこちら）', value: 'minecraft_give' },
@@ -78,15 +347,31 @@ function renderCmdTypeBtns() {
   c.innerHTML = '';
   CMD_TYPES.forEach(t => {
     const btn = document.createElement('button');
-    btn.className = 'cmd-type-btn' + (t.value === selectedCmdType ? ' active' : '');
+    btn.className = 'cmd-btn' + (t.value === selectedCmdType ? ' active' : '');
     btn.textContent = t.label;
     btn.onclick = () => { selectedCmdType = t.value; renderCmdTypeBtns(); };
     c.appendChild(btn);
   });
 }
 
+function makeSelect(options, selectedVal) {
+  const sel = document.createElement('select');
+  sel.style.width = 'auto';
+  options.forEach(([v, label]) => {
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = label;
+    if (v === selectedVal) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  return sel;
+}
+
+const nameColorSel = makeSelect(NAME_COLOR_OPTIONS, '');
+document.getElementById('name-color-wrap').appendChild(nameColorSel);
+
 let loreIdx = 0;
-function addLore(val) {
+function addLore(val, colorVal, italicVal) {
   loreIdx++;
   const row = document.createElement('div');
   row.className = 'lore-row';
@@ -97,23 +382,38 @@ function addLore(val) {
   inp.placeholder = loreIdx + '行目';
   inp.value = val || '';
 
+  const colorSel = makeSelect(LORE_COLOR_OPTIONS, colorVal || 'dark_purple');
+  colorSel.className = 'lore-color-sel';
+
+  const cbWrap = document.createElement('label');
+  cbWrap.className = 'italic-label';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.className = 'lore-italic-cb';
+  cb.checked = italicVal !== false;
+  cbWrap.appendChild(cb);
+  cbWrap.appendChild(document.createTextNode('斜体'));
+
   const del = document.createElement('button');
   del.textContent = '✕';
-  del.style.cssText = 'font-size: 12px; padding: 4px 8px; color: var(--color-text-secondary);';
+  del.className = 'icon-btn';
   del.onclick = () => row.remove();
 
   row.appendChild(inp);
+  row.appendChild(colorSel);
+  row.appendChild(cbWrap);
   row.appendChild(del);
   document.getElementById('lore-lines').appendChild(row);
 }
 
-document.getElementById('add-lore-btn').onclick = () => addLore('');
+document.getElementById('add-lore-btn').onclick = () => addLore('', 'dark_purple', true);
 
 document.getElementById('copy-btn').onclick = () => {
   navigator.clipboard.writeText(document.getElementById('cmd-output').textContent).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.textContent = 'コピー完了!';
-    setTimeout(() => btn.textContent = 'コピー', 1500);
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 1500);
   });
 };
 
@@ -121,6 +421,15 @@ function showError(msg) {
   const el = document.getElementById('error-msg');
   el.textContent = msg;
   el.style.display = msg ? 'block' : 'none';
+}
+
+function makeSNBT(obj) {
+  const parts = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (typeof v === 'string') parts.push(`${k}:"${v}"`);
+    else parts.push(`${k}:${v}`);
+  }
+  return `{${parts.join(',')}}`;
 }
 
 function generate() {
@@ -132,14 +441,27 @@ function generate() {
 
   const count = parseInt(document.getElementById('count').value) || 1;
   const name = document.getElementById('itemname').value.trim();
-  const lores = [...document.querySelectorAll('.lore-text')]
-    .map(i => i.value.trim())
-    .filter(v => v);
+  const nameItalic = document.getElementById('name-italic').checked;
+  const nameColor = nameColorSel.value;
+
+  const rows = document.querySelectorAll('.lore-row');
+  const lores = [];
+  rows.forEach(row => {
+    const t = row.querySelector('.lore-text').value.trim();
+    const c = row.querySelector('.lore-color-sel').value;
+    const it = row.querySelector('.lore-italic-cb').checked;
+    if (t) lores.push({ text: t, color: c, italic: it });
+  });
 
   const components = [];
-  if (name) components.push(`custom_name='${name}'`);
+  if (name) {
+    const obj = { text: name, italic: nameItalic };
+    if (nameColor) obj.color = nameColor;
+    components.push(`custom_name=${makeSNBT(obj)}`);
+  }
   if (lores.length > 0) {
-    components.push(`lore=[${lores.map(l => `'${l}'`).join(',')}]`);
+    const arr = lores.map(l => makeSNBT({ text: l.text, color: l.color, italic: l.italic }));
+    components.push(`lore=[${arr.join(',')}]`);
   }
 
   const comp = components.length ? `[${components.join(',')}]` : '';
@@ -149,14 +471,18 @@ function generate() {
 
   const prev = document.getElementById('mc-preview');
   prev.innerHTML = '';
+
   const nd = document.createElement('div');
-  nd.style.cssText = 'font-size:14px;font-weight:bold;color:#ffffff;margin-bottom:4px;';
+  nd.className = 'preview-name';
+  nd.style.cssText = `font-style:${nameItalic?'italic':'normal'};color:${nameColor?MC_COLORS[nameColor]||'#fff':'#ffffff'};`;
   nd.textContent = name || item.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   prev.appendChild(nd);
+
   lores.forEach(l => {
     const ld = document.createElement('div');
-    ld.style.cssText = 'font-size:13px;color:#AA00AA;font-style:italic;';
-    ld.textContent = l;
+    ld.className = 'preview-lore';
+    ld.style.cssText = `color:${MC_COLORS[l.color]||'#AA00AA'};font-style:${l.italic?'italic':'normal'};`;
+    ld.textContent = l.text;
     prev.appendChild(ld);
   });
 
@@ -165,3 +491,5 @@ function generate() {
 
 renderCmdTypeBtns();
 </script>
+</body>
+</html>
