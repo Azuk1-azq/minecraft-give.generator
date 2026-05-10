@@ -3,305 +3,140 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minecraft /give ジェネレーター</title>
+  <title>Minecraft /give Generator</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0d0d0d;
-      --panel: #1a1a1a;
-      --border: #2e2e2e;
-      --accent: #57c754;
-      --accent2: #a259ff;
-      --text: #e8e8e8;
-      --text-sub: #888;
-      --danger: #ff5555;
-      --input-bg: #111;
+      --bg: #0d0d0d; --panel: #1a1a1a; --border: #2e2e2e;
+      --accent: #57c754; --text: #e8e8e8; --text-sub: #888;
+      --danger: #ff5555; --input-bg: #111;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; padding: 40px 16px 80px; }
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 { font-family: 'Press Start 2P', monospace; font-size: clamp(12px, 3vw, 20px); color: var(--accent); text-shadow: 0 0 20px rgba(87,199,84,0.5); line-height: 1.6; margin-bottom: 10px; }
+    header p { color: var(--text-sub); font-size: 13px; margin-bottom: 14px; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Noto Sans JP', sans-serif;
-      min-height: 100vh;
-      padding: 40px 16px 80px;
+    .lang-toggle {
+      display: inline-flex; align-items: center; gap: 0;
+      border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+      margin-bottom: 14px;
     }
-
-    header {
-      text-align: center;
-      margin-bottom: 40px;
+    .lang-btn {
+      background: transparent; border: none; color: var(--text-sub);
+      cursor: pointer; font-family: 'Noto Sans JP', sans-serif;
+      font-size: 12px; padding: 5px 14px; transition: all 0.15s;
     }
+    .lang-btn.active { background: var(--accent); color: #000; }
+    .lang-btn:not(.active):hover { color: var(--text); }
+    .lang-divider { width: 1px; background: var(--border); height: 100%; }
 
-    header h1 {
-      font-family: 'Press Start 2P', monospace;
-      font-size: clamp(12px, 3vw, 20px);
-      color: var(--accent);
-      text-shadow: 0 0 20px rgba(87,199,84,0.5);
-      line-height: 1.6;
-      margin-bottom: 10px;
-    }
-
-    header p {
-      color: var(--text-sub);
-      font-size: 13px;
-    }
-
-    .container {
-      max-width: 680px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-    }
-
-    .card-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-sub);
-      margin-bottom: 10px;
-    }
-
+    .container { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+    .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-sub); margin-bottom: 10px; }
     input[type=text], input[type=number], select {
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: 'Noto Sans JP', sans-serif;
-      font-size: 14px;
-      padding: 10px 12px;
-      width: 100%;
-      outline: none;
-      transition: border-color 0.2s;
+      background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px;
+      padding: 10px 12px; width: 100%; outline: none; transition: border-color 0.2s;
     }
-
-    input[type=text]:focus, input[type=number]:focus, select:focus {
-      border-color: var(--accent);
-    }
-
+    input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--accent); }
     select { cursor: pointer; }
-
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
     .cmd-btns { display: flex; flex-direction: column; gap: 8px; }
-
     .cmd-btn {
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-sub);
-      cursor: pointer;
-      font-family: 'Noto Sans JP', sans-serif;
-      font-size: 13px;
-      padding: 10px 14px;
-      text-align: left;
-      transition: all 0.15s;
+      background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text-sub); cursor: pointer; font-family: 'Noto Sans JP', sans-serif;
+      font-size: 13px; padding: 10px 14px; text-align: left; transition: all 0.15s;
     }
-
     .cmd-btn:hover { border-color: var(--accent); color: var(--text); }
-
-    .cmd-btn.active {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: rgba(87,199,84,0.07);
-    }
-
+    .cmd-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(87,199,84,0.07); }
     .name-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
-
     .lore-list { display: flex; flex-direction: column; gap: 8px; }
-
     .lore-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center; }
-
     .lore-row input[type=text] { width: 100%; }
-
-    .icon-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-sub);
-      cursor: pointer;
-      font-size: 13px;
-      padding: 8px 10px;
-      transition: all 0.15s;
-    }
-
+    .icon-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-sub); cursor: pointer; font-size: 13px; padding: 8px 10px; transition: all 0.15s; }
     .icon-btn:hover { border-color: var(--danger); color: var(--danger); }
-
-    .add-btn {
-      background: transparent;
-      border: 1px dashed var(--border);
-      border-radius: 6px;
-      color: var(--text-sub);
-      cursor: pointer;
-      font-size: 13px;
-      padding: 10px;
-      width: 100%;
-      margin-top: 8px;
-      transition: all 0.15s;
-    }
-
+    .add-btn { background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--text-sub); cursor: pointer; font-size: 13px; padding: 10px; width: 100%; margin-top: 8px; transition: all 0.15s; }
     .add-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-    .italic-label {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      color: var(--text-sub);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .generate-btn {
-      background: var(--accent);
-      border: none;
-      border-radius: 8px;
-      color: #000;
-      cursor: pointer;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 11px;
-      padding: 16px;
-      width: 100%;
-      transition: all 0.15s;
-      letter-spacing: 0.05em;
-    }
-
+    .italic-label { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-sub); cursor: pointer; white-space: nowrap; }
+    .generate-btn { background: var(--accent); border: none; border-radius: 8px; color: #000; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 11px; padding: 16px; width: 100%; transition: all 0.15s; letter-spacing: 0.05em; }
     .generate-btn:hover { background: #6edd6b; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(87,199,84,0.3); }
     .generate-btn:active { transform: translateY(0); }
-
     .error-msg { color: var(--danger); font-size: 13px; margin-top: -8px; }
-
     .output-card { display: none; }
-
-    .output-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
+    .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .output-label { font-size: 12px; color: var(--text-sub); }
-
-    .copy-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-sub);
-      cursor: pointer;
-      font-size: 12px;
-      padding: 6px 12px;
-      transition: all 0.15s;
-    }
-
+    .copy-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text-sub); cursor: pointer; font-size: 12px; padding: 6px 12px; transition: all 0.15s; }
     .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
     .copy-btn.copied { border-color: var(--accent); color: var(--accent); }
-
-    .cmd-code {
-      background: #0a0a0a;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--accent);
-      font-family: 'Press Start 2P', monospace;
-      font-size: 10px;
-      line-height: 1.8;
-      padding: 14px;
-      word-break: break-all;
-      white-space: pre-wrap;
-    }
-
-    .preview-box {
-      background: #0a0a0a;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      margin-top: 12px;
-      padding: 14px 16px;
-    }
-
+    .cmd-code { background: #0a0a0a; border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-family: 'Press Start 2P', monospace; font-size: 10px; line-height: 1.8; padding: 14px; word-break: break-all; white-space: pre-wrap; }
+    .preview-box { background: #0a0a0a; border: 1px solid var(--border); border-radius: 6px; margin-top: 12px; padding: 14px 16px; }
     .preview-label { font-size: 10px; color: var(--text-sub); margin-bottom: 8px; font-family: 'Press Start 2P', monospace; }
-
-    .preview-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; font-family: 'Noto Sans JP', sans-serif; }
-
-    .preview-lore { font-size: 13px; font-style: italic; font-family: 'Noto Sans JP', sans-serif; }
-
-    footer {
-      text-align: center;
-      margin-top: 60px;
-      color: var(--text-sub);
-      font-size: 11px;
-      font-family: 'Press Start 2P', monospace;
-    }
+    .preview-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+    .preview-lore { font-size: 13px; font-style: italic; }
   </style>
 </head>
 <body>
 
 <header>
   <h1>🌏 Minecraft<br>/give Generator</h1>
-  <p>Java Edition 1.20.5+ 対応</p>
+  <p data-i18n="subtitle">Java Edition 1.20.5+ 対応</p>
+  <div class="lang-toggle">
+    <button class="lang-btn active" id="lang-ja" onclick="setLang('ja')">日本語</button>
+    <div class="lang-divider"></div>
+    <button class="lang-btn" id="lang-en" onclick="setLang('en')">English</button>
+  </div>
 </header>
-  
-<div class="container">
 
-  <!-- コマンド形式 -->
+<div class="container">
   <div class="card">
-    <div class="card-label">コマンド形式</div>
+    <div class="card-label" data-i18n="cmdFormat">コマンド形式</div>
     <div class="cmd-btns" id="cmd-type-btns"></div>
   </div>
 
-  <!-- 基本設定 -->
   <div class="card">
-    <div class="card-label">基本設定</div>
+    <div class="card-label" data-i18n="basicSettings">基本設定</div>
     <div style="display:flex;flex-direction:column;gap:12px;">
       <div>
-        <div class="card-label">プレイヤー名</div>
-        <input type="text" id="player-input" placeholder="例: _azq" />
+        <div class="card-label" data-i18n="playerName">プレイヤー名</div>
+        <input type="text" id="player-input" data-i18n-placeholder="playerPlaceholder" placeholder="例: _azq" />
       </div>
       <div class="grid2">
         <div>
-          <div class="card-label">アイテムID</div>
-          <input type="text" id="itemid" placeholder="例: diamond_sword" />
+          <div class="card-label" data-i18n="itemId">アイテムID</div>
+          <input type="text" id="itemid" data-i18n-placeholder="itemPlaceholder" placeholder="例: diamond_sword" />
         </div>
         <div>
-          <div class="card-label">個数</div>
+          <div class="card-label" data-i18n="amount">個数</div>
           <input type="number" id="count" value="1" min="1" max="64" />
         </div>
       </div>
     </div>
   </div>
 
-  <!-- カスタム名 -->
   <div class="card">
-    <div class="card-label">カスタム名（custom_name）</div>
+    <div class="card-label" data-i18n="customName">カスタム名（custom_name）</div>
     <div class="name-row">
-      <input type="text" id="itemname" placeholder="空欄でデフォルト名" />
+      <input type="text" id="itemname" data-i18n-placeholder="customNamePlaceholder" placeholder="空欄でデフォルト名" />
       <div id="name-color-wrap"></div>
-      <label class="italic-label"><input type="checkbox" id="name-italic" /> 斜体</label>
+      <label class="italic-label"><input type="checkbox" id="name-italic" /> <span data-i18n="italic">斜体</span></label>
     </div>
   </div>
 
-  <!-- Lore -->
   <div class="card">
-    <div class="card-label">詳細テキスト（Lore）</div>
+    <div class="card-label" data-i18n="lore">詳細テキスト（Lore）</div>
     <div class="lore-list" id="lore-lines"></div>
-    <button class="add-btn" id="add-lore-btn">+ 行を追加</button>
+    <button class="add-btn" id="add-lore-btn" data-i18n="addLine">+ 行を追加</button>
   </div>
 
   <div class="error-msg" id="error-msg" style="display:none;"></div>
 
   <button class="generate-btn" onclick="generate()">GENERATE</button>
 
-  <!-- 出力 -->
   <div class="card output-card" id="output-area">
     <div class="output-header">
-      <span class="output-label">生成されたコマンド</span>
-      <button class="copy-btn" id="copy-btn">コピー</button>
+      <span class="output-label" data-i18n="generatedCmd">生成されたコマンド</span>
+      <button class="copy-btn" id="copy-btn" data-i18n="copy">コピー</button>
     </div>
     <div class="cmd-code" id="cmd-output"></div>
     <div class="preview-box">
@@ -309,12 +144,84 @@
       <div id="mc-preview"></div>
     </div>
   </div>
-
 </div>
 
-<footer>powered by github Pages</footer>
-
 <script>
+const I18N = {
+  ja: {
+    subtitle: 'Java Edition 1.20.5+ 対応',
+    cmdFormat: 'コマンド形式',
+    basicSettings: '基本設定',
+    playerName: 'プレイヤー名',
+    playerPlaceholder: '例: _azq',
+    itemId: 'アイテムID',
+    itemPlaceholder: '例: diamond_sword',
+    amount: '個数',
+    customName: 'カスタム名（custom_name）',
+    customNamePlaceholder: '空欄でデフォルト名',
+    italic: '斜体',
+    lore: '詳細テキスト（Lore）',
+    addLine: '+ 行を追加',
+    generatedCmd: '生成されたコマンド',
+    copy: 'コピー',
+    copied: 'コピー完了!',
+    footer: '',
+    errPlayer: 'プレイヤー名を入力してください',
+    errItem: 'アイテムIDを入力してください',
+    lorePlaceholder: (n) => `${n}行目`,
+    italic_label: '斜体',
+    cmdTypes: [
+      { label: '/give（シングルプレイまたはバニラサーバーの場合はこちら）', value: 'give' },
+      { label: '/minecraft:give（EssentialsXの場合はこちら）', value: 'minecraft_give' },
+    ],
+    colorOptions: [
+      ['dark_purple','紫'],['light_purple','明紫'],['white','白'],
+      ['yellow','黄'],['gold','金'],['aqua','水色'],['green','緑'],['red','赤'],['gray','灰']
+    ],
+    nameColorOptions: [
+      ['','色なし'],['white','白'],['yellow','黄'],['gold','金'],['aqua','水色'],
+      ['blue','青'],['light_purple','明紫'],['dark_purple','紫'],
+      ['green','緑'],['dark_green','暗緑'],['red','赤'],['dark_red','暗赤'],['gray','灰'],['dark_gray','暗灰']
+    ],
+  },
+  en: {
+    subtitle: 'Java Edition 1.20.5+ Support',
+    cmdFormat: 'Command Type',
+    basicSettings: 'Basic Settings',
+    playerName: 'Player Name',
+    playerPlaceholder: 'e.g. _azq',
+    itemId: 'Item ID',
+    itemPlaceholder: 'e.g. diamond_sword',
+    amount: 'Amount',
+    customName: 'Custom Name (custom_name)',
+    customNamePlaceholder: 'Leave blank for default name',
+    italic: 'Italic',
+    lore: 'Lore Text',
+    addLine: '+ Add Line',
+    generatedCmd: 'Generated Command',
+    copy: 'Copy',
+    copied: 'Copied!',
+    footer: '',
+    errPlayer: 'Please enter a player name',
+    errItem: 'Please enter an item ID',
+    lorePlaceholder: (n) => `Line ${n}`,
+    italic_label: 'Italic',
+    cmdTypes: [
+      { label: '/give (for singleplayer or vanilla server)', value: 'give' },
+      { label: '/minecraft:give (for EssentialsX)', value: 'minecraft_give' },
+    ],
+    colorOptions: [
+      ['dark_purple','Purple'],['light_purple','Lt.Purple'],['white','White'],
+      ['yellow','Yellow'],['gold','Gold'],['aqua','Aqua'],['green','Green'],['red','Red'],['gray','Gray']
+    ],
+    nameColorOptions: [
+      ['','None'],['white','White'],['yellow','Yellow'],['gold','Gold'],['aqua','Aqua'],
+      ['blue','Blue'],['light_purple','Lt.Purple'],['dark_purple','Purple'],
+      ['green','Green'],['dark_green','Dk.Green'],['red','Red'],['dark_red','Dk.Red'],['gray','Gray'],['dark_gray','Dk.Gray']
+    ],
+  }
+};
+
 const MC_COLORS = {
   white:'#ffffff', yellow:'#FFFF55', gold:'#FFAA00', aqua:'#55FFFF',
   blue:'#5555FF', light_purple:'#FF55FF', dark_purple:'#AA00AA',
@@ -322,35 +229,31 @@ const MC_COLORS = {
   dark_red:'#AA0000', gray:'#AAAAAA', dark_gray:'#555555'
 };
 
-const LORE_COLOR_OPTIONS = [
-  ['dark_purple','紫'],['light_purple','明紫'],['white','白'],
-  ['yellow','黄'],['gold','金'],['aqua','水色'],['green','緑'],
-  ['red','赤'],['gray','灰']
-];
-
-const NAME_COLOR_OPTIONS = [
-  ['','色なし'],['white','白'],['yellow','黄'],['gold','金'],['aqua','水色'],
-  ['blue','青'],['light_purple','明紫'],['dark_purple','紫'],
-  ['green','緑'],['dark_green','暗緑'],['red','赤'],
-  ['dark_red','暗赤'],['gray','灰'],['dark_gray','暗灰']
-];
-
-const CMD_TYPES = [
-  { label: '/give（シングルプレイまたはバニラサーバーの場合はこちら）', value: 'give' },
-  { label: '/minecraft:give（EssentialsXの場合はこちら）', value: 'minecraft_give' },
-];
-
+let lang = 'ja';
 let selectedCmdType = 'give';
+let nameColorSel = null;
+let loreIdx = 0;
 
-function renderCmdTypeBtns() {
-  const c = document.getElementById('cmd-type-btns');
-  c.innerHTML = '';
-  CMD_TYPES.forEach(t => {
-    const btn = document.createElement('button');
-    btn.className = 'cmd-btn' + (t.value === selectedCmdType ? ' active' : '');
-    btn.textContent = t.label;
-    btn.onclick = () => { selectedCmdType = t.value; renderCmdTypeBtns(); };
-    c.appendChild(btn);
+function t(key) { return I18N[lang][key] || key; }
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('lang-ja').classList.toggle('active', l === 'ja');
+  document.getElementById('lang-en').classList.toggle('active', l === 'en');
+  applyI18n();
+  renderCmdTypeBtns();
+  rebuildNameColorSel();
+  rebuildLoreColorSels();
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = t(key);
   });
 }
 
@@ -367,10 +270,39 @@ function makeSelect(options, selectedVal) {
   return sel;
 }
 
-const nameColorSel = makeSelect(NAME_COLOR_OPTIONS, '');
-document.getElementById('name-color-wrap').appendChild(nameColorSel);
+function rebuildNameColorSel() {
+  const wrap = document.getElementById('name-color-wrap');
+  const currentVal = nameColorSel ? nameColorSel.value : '';
+  wrap.innerHTML = '';
+  nameColorSel = makeSelect(I18N[lang].nameColorOptions, currentVal);
+  wrap.appendChild(nameColorSel);
+}
 
-let loreIdx = 0;
+function rebuildLoreColorSels() {
+  document.querySelectorAll('.lore-color-sel').forEach(sel => {
+    const currentVal = sel.value;
+    const newSel = makeSelect(I18N[lang].colorOptions, currentVal);
+    newSel.className = 'lore-color-sel';
+    sel.replaceWith(newSel);
+  });
+  // italic labels
+  document.querySelectorAll('.italic-label span.lore-italic-text').forEach(span => {
+    span.textContent = t('italic_label');
+  });
+}
+
+function renderCmdTypeBtns() {
+  const c = document.getElementById('cmd-type-btns');
+  c.innerHTML = '';
+  I18N[lang].cmdTypes.forEach(tp => {
+    const btn = document.createElement('button');
+    btn.className = 'cmd-btn' + (tp.value === selectedCmdType ? ' active' : '');
+    btn.textContent = tp.label;
+    btn.onclick = () => { selectedCmdType = tp.value; renderCmdTypeBtns(); };
+    c.appendChild(btn);
+  });
+}
+
 function addLore(val, colorVal, italicVal) {
   loreIdx++;
   const row = document.createElement('div');
@@ -379,10 +311,10 @@ function addLore(val, colorVal, italicVal) {
   const inp = document.createElement('input');
   inp.type = 'text';
   inp.className = 'lore-text';
-  inp.placeholder = loreIdx + '行目';
+  inp.placeholder = I18N[lang].lorePlaceholder(loreIdx);
   inp.value = val || '';
 
-  const colorSel = makeSelect(LORE_COLOR_OPTIONS, colorVal || 'dark_purple');
+  const colorSel = makeSelect(I18N[lang].colorOptions, colorVal || 'dark_purple');
   colorSel.className = 'lore-color-sel';
 
   const cbWrap = document.createElement('label');
@@ -391,8 +323,11 @@ function addLore(val, colorVal, italicVal) {
   cb.type = 'checkbox';
   cb.className = 'lore-italic-cb';
   cb.checked = italicVal !== false;
+  const cbText = document.createElement('span');
+  cbText.className = 'lore-italic-text';
+  cbText.textContent = t('italic_label');
   cbWrap.appendChild(cb);
-  cbWrap.appendChild(document.createTextNode('斜体'));
+  cbWrap.appendChild(cbText);
 
   const del = document.createElement('button');
   del.textContent = '✕';
@@ -411,9 +346,9 @@ document.getElementById('add-lore-btn').onclick = () => addLore('', 'dark_purple
 document.getElementById('copy-btn').onclick = () => {
   navigator.clipboard.writeText(document.getElementById('cmd-output').textContent).then(() => {
     const btn = document.getElementById('copy-btn');
-    btn.textContent = 'コピー完了!';
+    btn.textContent = t('copied');
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 1500);
+    setTimeout(() => { btn.textContent = t('copy'); btn.classList.remove('copied'); }, 1500);
   });
 };
 
@@ -435,8 +370,8 @@ function makeSNBT(obj) {
 function generate() {
   const player = document.getElementById('player-input').value.trim();
   const item = document.getElementById('itemid').value.trim();
-  if (!player) { showError('プレイヤー名を入力してください'); return; }
-  if (!item) { showError('アイテムIDを入力してください'); return; }
+  if (!player) { showError(t('errPlayer')); return; }
+  if (!item) { showError(t('errItem')); return; }
   showError('');
 
   const count = parseInt(document.getElementById('count').value) || 1;
@@ -447,10 +382,10 @@ function generate() {
   const rows = document.querySelectorAll('.lore-row');
   const lores = [];
   rows.forEach(row => {
-    const t = row.querySelector('.lore-text').value.trim();
+    const tt = row.querySelector('.lore-text').value.trim();
     const c = row.querySelector('.lore-color-sel').value;
     const it = row.querySelector('.lore-italic-cb').checked;
-    if (t) lores.push({ text: t, color: c, italic: it });
+    if (tt) lores.push({ text: tt, color: c, italic: it });
   });
 
   const components = [];
@@ -471,13 +406,11 @@ function generate() {
 
   const prev = document.getElementById('mc-preview');
   prev.innerHTML = '';
-
   const nd = document.createElement('div');
   nd.className = 'preview-name';
   nd.style.cssText = `font-style:${nameItalic?'italic':'normal'};color:${nameColor?MC_COLORS[nameColor]||'#fff':'#ffffff'};`;
   nd.textContent = name || item.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   prev.appendChild(nd);
-
   lores.forEach(l => {
     const ld = document.createElement('div');
     ld.className = 'preview-lore';
@@ -489,7 +422,10 @@ function generate() {
   document.getElementById('output-area').style.display = 'block';
 }
 
+// 初期化
+rebuildNameColorSel();
 renderCmdTypeBtns();
+applyI18n();
 </script>
 </body>
 </html>
